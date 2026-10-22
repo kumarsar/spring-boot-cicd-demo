@@ -59,3 +59,13 @@
 # (git remote add origin https://github.com/kumarsar/spring-boot-cicd-demo.git)
 
 # (git push -u origin main)
+
+
+Code -> new .jar -> Image -> (Docker hub) registry -> Image (Remote server / ec2) -> Docker -> Container (Remote server / ec2) -> Endpoint (Remote server / ec2)
+1. Checkout code
+2. Setup Java
+3. Build a jar
+4. Login dockerhub
+5. Build image
+6. push image
+7. Deploy to ec2 using SSH
