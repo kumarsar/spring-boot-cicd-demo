@@ -1,0 +1,44 @@
+name: Docker build -> publish -> deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      run: actions/checkout@v4
+
+    - name: Setup java
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Build jar
+      run: ./mvnw clean package -DskipTests
+
+    - name: Login to Docker hub
+      run: docker login -u "${{secrets.DOCKER_USERNAME}}" --password-stdin
+
+    - name: Build docker image
+      run: docker build -t ${{secrets.DOCKER_USERNAME}}/spring-boot-cicd-demo:latest
+
+    - name: Push image to Docker hub
+      run: docker push ${{secrets.DOCKER_USERNAME}}/spring-boot-cicd-demo:latest
+
+    - name: SSH and deploy to EC2
+      uses: appleboy/ssh-action@v1 
+      with:
+        host: ${{secrets.EC2_HOST}}
+        username: ${{ secrets.EC2_USER }}
+        key: $[ secrets.EC2_SSH_KEY })
+        script: |
+          docker stop spring-demo || true
+          docker rm spring-demo || true
+          docker pull ${{secrets.DOCKER_USERNAME}}/spring-boot-cicd-demo:latest
+          docker run -d --name spring-demo -p 8080:8080 ${{secrets.DOCKER_USERNAME}}/spring-boot-cicd-demo:latest
+    
